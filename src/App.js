@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import './App.css';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import React from 'react';
 
 function Home() {
   const navigate = useNavigate();
@@ -160,13 +161,20 @@ function Loading() {
   const location = useLocation();
   const navigate = useNavigate();
   const [error, setError] = useState(false);
-  const userInfo = location.state?.userInfo || {
+  
+  const userInfo = React.useMemo(() => location.state?.userInfo || {
     name: '사용자',
     mbti: '',
     loveExp: '',
     hobby: '',
     job: ''
-  };
+  }, [location.state?.userInfo]);
+
+  useEffect(() => {
+    if (error) {
+      console.log('Error occurred:', error);
+    }
+  }, [error]);
 
   useEffect(() => {
     const generatePoem = async () => {
