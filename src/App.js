@@ -34,7 +34,7 @@ function Home() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          시 만들기 시하기
+          시 만들기 시작하기
         </StartButton>
       </ContentWrapper>
     </Container>
