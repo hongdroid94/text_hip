@@ -50,6 +50,8 @@ function UserInfo() {
     hobby: '',
     job: ''
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -57,10 +59,92 @@ function UserInfo() {
       ...prev,
       [name]: value
     }));
+    
+    // 입력 시 해당 필드의 에러 메시지 초기화
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleBlur = (fieldName) => {
+    setTouched(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
+    validateField(fieldName, userInfo[fieldName]);
+  };
+
+  const validateField = (fieldName, value) => {
+    let error = '';
+    
+    switch (fieldName) {
+      case 'name':
+        if (!value.trim()) {
+          error = '이름을 입력해주세요';
+        } else if (value.length > 10) {
+          error = '이름은 10자 이내로 입력해주세요';
+        }
+        break;
+      case 'mbti':
+        if (!value) {
+          error = 'MBTI를 선택해주세요';
+        }
+        break;
+      case 'loveExp':
+        if (!value) {
+          error = '연애경험을 선택해주세요';
+        }
+        break;
+      case 'hobby':
+        if (!value.trim()) {
+          error = '취미를 입력해주세요';
+        } else if (value.length > 20) {
+          error = '취미는 20자 이내로 입력해주세요';
+        }
+        break;
+      case 'job':
+        if (!value.trim()) {
+          error = '직업을 입력해주세요';
+        } else if (value.length > 20) {
+          error = '직업은 20자 이내로 입력해주세요';
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [fieldName]: error
+    }));
+
+    return !error;
+  };
+
+  const validateForm = () => {
+    const fields = ['name', 'mbti', 'loveExp', 'hobby', 'job'];
+    let isValid = true;
+    
+    fields.forEach(field => {
+      if (!validateField(field, userInfo[field])) {
+        isValid = false;
+      }
+      setTouched(prev => ({
+        ...prev,
+        [field]: true
+      }));
+    });
+
+    return isValid;
   };
 
   const handleSubmit = () => {
-    navigate('/loading', { state: { userInfo: userInfo } });
+    if (validateForm()) {
+      navigate('/loading', { state: { userInfo: userInfo } });
+    }
   };
 
   const mbtiOptions = ['ISTJ', 'ISFJ', 'INFJ', 'INTJ', 'ISTP', 'ISFP', 'INFP', 'INTP', 
@@ -83,13 +167,16 @@ function UserInfo() {
             name="name"
             value={userInfo.name}
             onChange={handleInputChange}
-            placeholder="이름을 입력해주세요" 
+            onBlur={() => handleBlur('name')}
+            placeholder="이름을 입력해주세요"
+            error={touched.name && errors.name}
           />
+          {touched.name && errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
         </InputGroup>
 
         <InputGroup>
           <Label>MBTI</Label>
-          <SelectWrapper>
+          <SelectWrapper error={touched.mbti && errors.mbti}>
             {mbtiOptions.map((mbti) => (
               <RadioButton key={mbti}>
                 <input 
@@ -98,11 +185,13 @@ function UserInfo() {
                   value={mbti}
                   checked={userInfo.mbti === mbti}
                   onChange={handleInputChange}
+                  onBlur={() => handleBlur('mbti')}
                 />
                 <span>{mbti}</span>
               </RadioButton>
             ))}
           </SelectWrapper>
+          {touched.mbti && errors.mbti && <ErrorMessage>{errors.mbti}</ErrorMessage>}
         </InputGroup>
 
         <InputGroup>
@@ -417,22 +506,25 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 1rem;
-  border: 2px solid #e3e3ff;
+  padding: 0.8rem;
+  border: 2px solid ${props => props.error ? '#ff4d4f' : '#e1e1e1'};
   border-radius: 8px;
   font-size: 1rem;
+  outline: none;
   transition: border-color 0.3s;
 
   &:focus {
-    outline: none;
-    border-color: #6c63ff;
+    border-color: ${props => props.error ? '#ff4d4f' : '#6c63ff'};
   }
 `;
 
 const SelectWrapper = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: ${props => props.error ? '2px solid #ff4d4f' : 'none'};
+  border-radius: 8px;
 `;
 
 const RadioButton = styled.label`
@@ -554,6 +646,13 @@ const ActionButton = styled(motion.button)`
     padding: 0.8rem 1.6rem;
     font-size: 1rem;
   }
+`;
+
+const ErrorMessage = styled.span`
+  color: #ff4d4f;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  display: block;
 `;
 
 export default App;
